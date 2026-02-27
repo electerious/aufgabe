@@ -1,0 +1,240 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+VERSION="1.0.0"
+
+# Resolve symlinks to get actual script location
+SOURCE="${BASH_SOURCE[0]}"
+while [ -L "$SOURCE" ]; do
+  DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+LIB_DIR="${SCRIPT_DIR}/../lib"
+
+# Source library functions
+source "${LIB_DIR}/utils.sh"
+source "${LIB_DIR}/core.sh"
+
+show_help() {
+  cat << EOF
+aufgabe - Daily task logging made simple
+
+Usage: $(basename "$0") COMMAND [OPTIONS] [ARGS]
+
+Commands:
+  add TEXT [OPTIONS]    Add a task to a specific day
+  list [OPTIONS]        List tasks for a specific day
+  weekly [OPTIONS]      Copy weekly summary to clipboard
+
+Options for 'add':
+  --yesterday           Add task to yesterday (default: today)
+  --date YYYY-MM-DD     Add task to specific date
+
+Options for 'list':
+  --date YYYY-MM-DD     List tasks for specific date (default: today)
+
+Options for 'weekly':
+  --split               Copy each line separately with delay (default: copy all at once)
+
+Global Options:
+  -h, --help            Show this help message
+  -v, --version         Show version
+
+Environment Variables:
+  AUFGABE_DIR           Custom data directory (default: ~/.aufgabe)
+
+Examples:
+  $(basename "$0") add "Fixed a bug"
+  $(basename "$0") add "Code review" --yesterday
+  $(basename "$0") add "Planning meeting" --date 2026-02-27
+  $(basename "$0") list
+  $(basename "$0") list --date 2026-02-27
+  $(basename "$0") weekly
+  $(basename "$0") weekly --split
+
+Notes:
+  - Weekly summary runs Monday-Sunday
+  - Tasks are copied to clipboard in comma-separated format
+  - Days without tasks are omitted from weekly summary
+EOF
+}
+
+show_version() {
+  echo "aufgabe ${VERSION}"
+}
+
+# Main function
+main() {
+  if [[ $# -eq 0 ]]; then
+    show_help
+    exit 1
+  fi
+
+  local command="$1"
+  shift
+
+  case "${command}" in
+    add)
+      cmd_add "$@"
+      ;;
+    list)
+      cmd_list "$@"
+      ;;
+    weekly)
+      cmd_weekly "$@"
+      ;;
+    -h|--help)
+      show_help
+      exit 0
+      ;;
+    -v|--version)
+      show_version
+      exit 0
+      ;;
+    *)
+      echo "Error: Unknown command '${command}'" >&2
+      echo "Run '$(basename "$0") --help' for usage information" >&2
+      exit 1
+      ;;
+  esac
+}
+
+# Add command handler
+cmd_add() {
+  local task_text=""
+  local task_date=""
+  local use_yesterday=false
+
+  # Parse task text (first non-option argument)
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --yesterday)
+        use_yesterday=true
+        shift
+        ;;
+      --date)
+        if [[ $# -lt 2 ]]; then
+          echo "Error: --date requires a value" >&2
+          exit 1
+        fi
+        task_date="$2"
+        shift 2
+        ;;
+      *)
+        if [[ -z "${task_text}" ]]; then
+          task_text="$1"
+          shift
+        else
+          echo "Error: Unexpected argument '$1'" >&2
+          exit 1
+        fi
+        ;;
+    esac
+  done
+
+  if [[ -z "${task_text}" ]]; then
+    echo "Error: Task text is required" >&2
+    echo "Usage: $(basename "$0") add \"Task description\" [OPTIONS]" >&2
+    exit 1
+  fi
+
+  # Determine the date
+  if [[ -n "${task_date}" ]] && [[ "${use_yesterday}" == true ]]; then
+    echo "Error: Cannot use both --date and --yesterday" >&2
+    exit 1
+  fi
+
+  if [[ "${use_yesterday}" == true ]]; then
+    task_date="$(get_yesterday)"
+  elif [[ -z "${task_date}" ]]; then
+    task_date="$(get_today)"
+  fi
+
+  if add_task "${task_text}" "${task_date}"; then
+    echo "Task added to ${task_date}"
+  else
+    exit 1
+  fi
+}
+
+# List command handler
+cmd_list() {
+  local task_date=""
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --date)
+        if [[ $# -lt 2 ]]; then
+          echo "Error: --date requires a value" >&2
+          exit 1
+        fi
+        task_date="$2"
+        shift 2
+        ;;
+      *)
+        echo "Error: Unexpected argument '$1'" >&2
+        exit 1
+        ;;
+    esac
+  done
+
+  if [[ -z "${task_date}" ]]; then
+    task_date="$(get_today)"
+  fi
+
+  if ! list_tasks "${task_date}"; then
+    exit 1
+  fi
+}
+
+# Weekly command handler
+cmd_weekly() {
+  local use_split=false
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --split)
+        use_split=true
+        shift
+        ;;
+      *)
+        echo "Error: Unexpected argument '$1'" >&2
+        exit 1
+        ;;
+    esac
+  done
+
+  local summary
+  summary="$(get_weekly_summary)"
+
+  if [[ "${summary}" == "No tasks logged this week" ]]; then
+    echo "${summary}"
+    exit 0
+  fi
+
+  # Copy to clipboard using pbcopy
+  if ! command -v pbcopy &> /dev/null; then
+    echo "Error: pbcopy command not found. This tool requires macOS." >&2
+    exit 1
+  fi
+
+  if [[ "${use_split}" == true ]]; then
+    # Copy each line separately with delay
+    while IFS= read -r line; do
+      printf "%s" "$line" | pbcopy
+      sleep 1 # Small delay to ensure clipboard manages capture each copy
+    done <<< "${summary}"
+  else
+    # Copy all at once (default)
+    printf "%s" "${summary}" | pbcopy
+  fi
+
+  echo "Weekly summary copied to clipboard!"
+  echo ""
+  echo "Preview:"
+  echo -e "${summary}"
+}
+
+main "$@"
