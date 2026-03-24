@@ -70,6 +70,9 @@ aufgabe add "Code review for PR #123" --yesterday
 
 # Add a task to a specific date
 aufgabe add "Planning meeting" --date 2026-02-27
+
+# Skip adding if the exact same task already exists for that day
+aufgabe add "Fixed a bug in the login form" --skip-duplicate
 ```
 
 ### View Tasks

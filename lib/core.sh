@@ -17,6 +17,7 @@ fi
 add_task() {
   local task_text="${1:-}"
   local task_date="${2:-}"
+  local skip_duplicate="${3:-false}"
 
   if [[ -z "${task_text}" ]]; then
     echo "Error: Task text cannot be empty" >&2
@@ -37,6 +38,10 @@ add_task() {
 
   local task_file
   task_file="$(get_date_file "${task_date}")"
+
+  if [[ "${skip_duplicate}" == true ]] && [[ -f "${task_file}" ]] && grep -qxF "${task_text}" "${task_file}"; then
+    return 0
+  fi
 
   echo "${task_text}" >> "${task_file}"
   return 0

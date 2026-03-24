@@ -49,6 +49,7 @@ Examples:
   $(basename "$0") add "Fixed a bug"
   $(basename "$0") add "Code review" --yesterday
   $(basename "$0") add "Planning meeting" --date 2026-02-27
+  $(basename "$0") add "Existing task" --skip-duplicate
   $(basename "$0") list
   $(basename "$0") list --date 2026-02-27
   $(basename "$0") weekly
@@ -106,6 +107,7 @@ cmd_add() {
   local task_text=""
   local task_date=""
   local use_yesterday=false
+  local skip_duplicate=false
 
   # Parse task text (first non-option argument)
   while [[ $# -gt 0 ]]; do
@@ -121,6 +123,10 @@ cmd_add() {
         fi
         task_date="$2"
         shift 2
+        ;;
+      --skip-duplicate)
+        skip_duplicate=true
+        shift
         ;;
       *)
         if [[ -z "${task_text}" ]]; then
@@ -152,7 +158,7 @@ cmd_add() {
     task_date="$(get_today)"
   fi
 
-  if add_task "${task_text}" "${task_date}"; then
+  if add_task "${task_text}" "${task_date}" "${skip_duplicate}"; then
     echo "Task added to ${task_date}"
   else
     exit 1

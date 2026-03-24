@@ -64,6 +64,39 @@ teardown() {
   [[ "$output" =~ "Error: Invalid date format" ]]
 }
 
+@test "add_task with skip_duplicate skips existing task" {
+  task_file="${TEST_DATA_DIR}/2026-02-27.txt"
+  echo "Existing task" > "$task_file"
+
+  run add_task "Existing task" "2026-02-27" true
+  [ "$status" -eq 0 ]
+
+  line_count=$(wc -l < "$task_file" | tr -d ' ')
+  [ "$line_count" -eq 1 ]
+}
+
+@test "add_task with skip_duplicate adds task when no duplicate exists" {
+  task_file="${TEST_DATA_DIR}/2026-02-27.txt"
+  echo "First task" > "$task_file"
+
+  run add_task "Second task" "2026-02-27" true
+  [ "$status" -eq 0 ]
+
+  line_count=$(wc -l < "$task_file" | tr -d ' ')
+  [ "$line_count" -eq 2 ]
+}
+
+@test "add_task without skip_duplicate appends duplicate task" {
+  task_file="${TEST_DATA_DIR}/2026-02-27.txt"
+  echo "Same task" > "$task_file"
+
+  run add_task "Same task" "2026-02-27"
+  [ "$status" -eq 0 ]
+
+  line_count=$(wc -l < "$task_file" | tr -d ' ')
+  [ "$line_count" -eq 2 ]
+}
+
 @test "list_tasks displays tasks for existing file" {
   task_file="${TEST_DATA_DIR}/2026-02-27.txt"
   echo "Task 1" > "$task_file"
