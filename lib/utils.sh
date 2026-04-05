@@ -33,8 +33,16 @@ validate_date() {
   fi
 
   # Verify it's a valid date by trying to parse it
-  if ! date -j -f "%Y-%m-%d" "${date_str}" "+%Y-%m-%d" &>/dev/null; then
-    return 1
+  if date --version &>/dev/null 2>&1; then
+    # GNU date (Linux)
+    if ! date -d "${date_str}" "+%Y-%m-%d" &>/dev/null; then
+      return 1
+    fi
+  else
+    # BSD date (macOS)
+    if ! date -j -f "%Y-%m-%d" "${date_str}" "+%Y-%m-%d" &>/dev/null; then
+      return 1
+    fi
   fi
 
   return 0
@@ -61,19 +69,49 @@ get_today() {
 # Returns:
 #   Prints yesterday's date
 get_yesterday() {
-  date -v-1d +%Y-%m-%d
+  if date --version &>/dev/null 2>&1; then
+    date -d "yesterday" +%Y-%m-%d
+  else
+    date -v-1d +%Y-%m-%d
+  fi
 }
 
 # Returns Monday of the current week in YYYY-MM-DD format
 # Returns:
 #   Prints the Monday date
 get_week_start() {
-  date -v-Mon +%Y-%m-%d
+  if date --version &>/dev/null 2>&1; then
+    local dow
+    dow=$(date +%u)
+    date -d "$(date +%Y-%m-%d) - $((dow - 1)) days" +%Y-%m-%d
+  else
+    date -v-Mon +%Y-%m-%d
+  fi
 }
 
 # Returns Sunday of the current week in YYYY-MM-DD format
 # Returns:
 #   Prints the Sunday date
 get_week_end() {
-  date -v+Sun +%Y-%m-%d
+  if date --version &>/dev/null 2>&1; then
+    local dow
+    dow=$(date +%u)
+    date -d "$(date +%Y-%m-%d) + $((7 - dow)) days" +%Y-%m-%d
+  else
+    date -v+Sun +%Y-%m-%d
+  fi
+}
+
+# Returns the date for the next day in YYYY-MM-DD format
+# Arguments:
+#   $1 - Date string in YYYY-MM-DD format
+# Returns:
+#   Prints the next day's date
+_date_next_day() {
+  local date_str="${1}"
+  if date --version &>/dev/null 2>&1; then
+    date -d "${date_str} + 1 day" "+%Y-%m-%d"
+  else
+    date -j -v+1d -f "%Y-%m-%d" "${date_str}" "+%Y-%m-%d"
+  fi
 }

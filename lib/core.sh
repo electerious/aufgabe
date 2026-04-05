@@ -95,7 +95,7 @@ get_weekly_summary() {
   local output=""
 
   # Loop through each day of the week
-  while [[ "${current_date}" != "$(date -j -v+1d -f "%Y-%m-%d" "${week_end}" "+%Y-%m-%d")" ]]; do
+  while [[ "${current_date}" != "$(_date_next_day "${week_end}")" ]]; do
     local task_file
     task_file="$(get_date_file "${current_date}")"
 
@@ -113,7 +113,7 @@ get_weekly_summary() {
     fi
 
     # Move to next day
-    current_date=$(date -j -v+1d -f "%Y-%m-%d" "${current_date}" "+%Y-%m-%d")
+    current_date=$(_date_next_day "${current_date}")
   done
 
   if [[ -z "${output}" ]]; then
