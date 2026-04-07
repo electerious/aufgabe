@@ -123,7 +123,11 @@ teardown() {
 @test "get_weekly_summary returns tasks in correct format" {
   # Get current week dates
   monday=$(get_week_start)
-  tuesday=$(date -j -v+1d -f "%Y-%m-%d" "$monday" "+%Y-%m-%d")
+  if [[ "${_GNU_DATE}" == true ]]; then
+    tuesday=$(date -d "${monday} + 1 day" "+%Y-%m-%d")
+  else
+    tuesday=$(date -j -v+1d -f "%Y-%m-%d" "$monday" "+%Y-%m-%d")
+  fi
 
   # Create test files
   echo "Task 1" > "${TEST_DATA_DIR}/${monday}.txt"
