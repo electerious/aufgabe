@@ -5,6 +5,9 @@
 # Default data directory
 DATA_DIR="${AUFGABE_DIR:-${HOME}/.aufgabe}"
 
+# Detect date implementation once: true = GNU date (Linux), false = BSD date (macOS)
+date --version &>/dev/null 2>&1 && _GNU_DATE=true || _GNU_DATE=false
+
 # Ensures the data directory exists
 # Returns:
 #   0 on success
@@ -33,7 +36,7 @@ validate_date() {
   fi
 
   # Verify it's a valid date by trying to parse it
-  if date --version &>/dev/null 2>&1; then
+  if [[ "${_GNU_DATE}" == true ]]; then
     # GNU date (Linux)
     if ! date -d "${date_str}" "+%Y-%m-%d" &>/dev/null; then
       return 1
@@ -69,7 +72,7 @@ get_today() {
 # Returns:
 #   Prints yesterday's date
 get_yesterday() {
-  if date --version &>/dev/null 2>&1; then
+  if [[ "${_GNU_DATE}" == true ]]; then
     date -d "yesterday" +%Y-%m-%d
   else
     date -v-1d +%Y-%m-%d
@@ -80,7 +83,7 @@ get_yesterday() {
 # Returns:
 #   Prints the Monday date
 get_week_start() {
-  if date --version &>/dev/null 2>&1; then
+  if [[ "${_GNU_DATE}" == true ]]; then
     local dow
     dow=$(date +%u)
     date -d "$(date +%Y-%m-%d) - $((dow - 1)) days" +%Y-%m-%d
@@ -93,7 +96,7 @@ get_week_start() {
 # Returns:
 #   Prints the Sunday date
 get_week_end() {
-  if date --version &>/dev/null 2>&1; then
+  if [[ "${_GNU_DATE}" == true ]]; then
     local dow
     dow=$(date +%u)
     date -d "$(date +%Y-%m-%d) + $((7 - dow)) days" +%Y-%m-%d
@@ -109,7 +112,7 @@ get_week_end() {
 #   Prints the next day's date
 _date_next_day() {
   local date_str="${1}"
-  if date --version &>/dev/null 2>&1; then
+  if [[ "${_GNU_DATE}" == true ]]; then
     date -d "${date_str} + 1 day" "+%Y-%m-%d"
   else
     date -j -v+1d -f "%Y-%m-%d" "${date_str}" "+%Y-%m-%d"

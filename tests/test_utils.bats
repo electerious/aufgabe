@@ -91,7 +91,7 @@ teardown() {
   [ "$status" -eq 0 ]
 
   # Verify it's a Monday (day of week = 1)
-  if date --version &>/dev/null 2>&1; then
+  if [[ "${_GNU_DATE}" == true ]]; then
     day_of_week=$(date -d "$result" "+%u")
   else
     day_of_week=$(date -j -f "%Y-%m-%d" "$result" "+%u")
@@ -105,7 +105,7 @@ teardown() {
   [ "$status" -eq 0 ]
 
   # Verify it's a Sunday (day of week = 7)
-  if date --version &>/dev/null 2>&1; then
+  if [[ "${_GNU_DATE}" == true ]]; then
     day_of_week=$(date -d "$result" "+%u")
   else
     day_of_week=$(date -j -f "%Y-%m-%d" "$result" "+%u")
