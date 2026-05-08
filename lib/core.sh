@@ -77,7 +77,7 @@ list_tasks() {
   return 0
 }
 
-# Generates weekly summary in clipboard format
+# Generates weekly summary
 # Format: Each day's tasks comma-separated, one line per day
 # Days without tasks are skipped
 # Returns:

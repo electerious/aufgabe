@@ -26,7 +26,7 @@ Usage: $(basename "$0") COMMAND [OPTIONS] [ARGS]
 Commands:
   add TEXT [OPTIONS]    Add a task to a specific day
   list [OPTIONS]        List tasks for a specific day
-  weekly [OPTIONS]      Copy weekly summary to clipboard
+  weekly                Show weekly summary
 
 Options for 'add':
   --yesterday           Add task to yesterday (default: today)
@@ -34,9 +34,6 @@ Options for 'add':
 
 Options for 'list':
   --date YYYY-MM-DD     List tasks for specific date (default: today)
-
-Options for 'weekly':
-  --split               Copy each line separately with delay (default: copy all at once)
 
 Global Options:
   -h, --help            Show this help message
@@ -53,11 +50,9 @@ Examples:
   $(basename "$0") list
   $(basename "$0") list --date 2026-02-27
   $(basename "$0") weekly
-  $(basename "$0") weekly --split
 
 Notes:
   - Weekly summary runs Monday-Sunday
-  - Tasks are copied to clipboard in comma-separated format
   - Days without tasks are omitted from weekly summary
 EOF
 }
@@ -197,49 +192,8 @@ cmd_list() {
 
 # Weekly command handler
 cmd_weekly() {
-  local use_split=false
-
-  while [[ $# -gt 0 ]]; do
-    case "$1" in
-      --split)
-        use_split=true
-        shift
-        ;;
-      *)
-        echo "Error: Unexpected argument '$1'" >&2
-        exit 1
-        ;;
-    esac
-  done
-
   local summary
   summary="$(get_weekly_summary)"
-
-  if [[ "${summary}" == "No tasks logged this week" ]]; then
-    echo "${summary}"
-    exit 0
-  fi
-
-  # Copy to clipboard using pbcopy
-  if ! command -v pbcopy &> /dev/null; then
-    echo "Error: pbcopy command not found. This tool requires macOS." >&2
-    exit 1
-  fi
-
-  if [[ "${use_split}" == true ]]; then
-    # Copy each line separately with delay
-    while IFS= read -r line; do
-      printf "%s" "$line" | pbcopy
-      sleep 1 # Small delay to ensure clipboard manages capture each copy
-    done <<< "${summary}"
-  else
-    # Copy all at once (default)
-    printf "%s" "${summary}" | pbcopy
-  fi
-
-  echo "Weekly summary copied to clipboard!"
-  echo ""
-  echo "Preview:"
   echo -e "${summary}"
 }
 

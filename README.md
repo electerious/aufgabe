@@ -24,11 +24,11 @@ Daily task logging made simple.
 
 ## Description
 
-`aufgabe` is a simple bash CLI tool for logging daily tasks and generating weekly summaries. It stores tasks as plain text files and provides commands to add tasks to specific days, view logged tasks, and generate weekly summaries that are automatically copied to your clipboard.
+`aufgabe` is a simple bash CLI tool for logging daily tasks and generating weekly summaries. It stores tasks as plain text files and provides commands to add tasks to specific days, view logged tasks, and generate weekly summaries.
 
 ## Requirements
 
-- macOS (uses `pbcopy` for clipboard and BSD `date` commands)
+- macOS (uses BSD `date` commands)
 - Bash 3.2 or higher (included with macOS)
 - For testing: [bats-core](https://github.com/bats-core/bats-core)
 
@@ -88,19 +88,14 @@ aufgabe list --date 2026-02-27
 ### Weekly Summary
 
 ```bash
-# Copy this week's tasks to clipboard (Monday-Sunday)
+# Show this week's tasks (Monday-Sunday)
 aufgabe weekly
-
-# Copy each line separately with delay (useful when used with a clipboard manager)
-aufgabe weekly --split
 ```
 
 The weekly summary format:
 - Each day's tasks are comma-separated on a single line
 - Each day appears on its own line
 - Days without tasks are omitted
-- Output is copied to clipboard automatically (all at once by default)
-- Use `--split` to copy each line separately with a 1-second delay so clipboard managers can capture each line as a separate entry
 
 Example output:
 ```
@@ -181,10 +176,6 @@ bats -t tests/
 ```
 
 ### Troubleshooting
-
-**"pbcopy command not found"**
-
-This tool requires macOS. The `pbcopy` command is built into macOS for clipboard operations.
 
 **Invalid date format errors**
 
