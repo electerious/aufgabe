@@ -112,3 +112,13 @@ teardown() {
   fi
   [ "$day_of_week" -eq 7 ]
 }
+
+@test "_date_add_days shifts dates in both directions" {
+  run _date_add_days "2026-03-01" -1
+  [ "$status" -eq 0 ]
+  [ "$output" = "2026-02-28" ]
+
+  run _date_add_days "2026-02-28" 1
+  [ "$status" -eq 0 ]
+  [ "$output" = "2026-03-01" ]
+}

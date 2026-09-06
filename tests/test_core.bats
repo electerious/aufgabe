@@ -179,3 +179,30 @@ teardown() {
   [ "$status" -eq 0 ]
   [ "$output" = "Single task" ]
 }
+
+@test "get_weekly_summary returns tasks for the previous week" {
+  monday=$(get_week_start)
+  previous_monday=$(_date_add_days "${monday}" -7)
+  echo "Previous week task" > "${TEST_DATA_DIR}/${previous_monday}.txt"
+  echo "Current week task" > "${TEST_DATA_DIR}/${monday}.txt"
+
+  run get_weekly_summary -1
+  [ "$status" -eq 0 ]
+  [ "$output" = "Previous week task" ]
+}
+
+@test "get_weekly_summary returns tasks for a future week" {
+  monday=$(get_week_start)
+  next_monday=$(_date_add_days "${monday}" 7)
+  echo "Next week task" > "${TEST_DATA_DIR}/${next_monday}.txt"
+
+  run get_weekly_summary 1
+  [ "$status" -eq 0 ]
+  [ "$output" = "Next week task" ]
+}
+
+@test "get_weekly_summary rejects a non-integer offset" {
+  run get_weekly_summary "last"
+  [ "$status" -eq 1 ]
+  [[ "$output" =~ "Error: Week offset must be an integer" ]]
+}

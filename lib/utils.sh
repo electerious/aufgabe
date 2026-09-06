@@ -105,6 +105,29 @@ get_week_end() {
   fi
 }
 
+# Returns a date shifted by a number of days in YYYY-MM-DD format
+# Arguments:
+#   $1 - Date string in YYYY-MM-DD format
+#   $2 - Number of days to add (may be negative)
+# Returns:
+#   Prints the shifted date
+_date_add_days() {
+  local date_str="${1:-}"
+  local days="${2:-0}"
+
+  if [[ "${_GNU_DATE}" == true ]]; then
+    date -d "${date_str} ${days} days" "+%Y-%m-%d"
+  else
+    local adjustment
+    if [[ "${days}" == -* ]]; then
+      adjustment="${days}d"
+    else
+      adjustment="+${days}d"
+    fi
+    date -j "-v${adjustment}" -f "%Y-%m-%d" "${date_str}" "+%Y-%m-%d"
+  fi
+}
+
 # Returns the date for the next day in YYYY-MM-DD format
 # Arguments:
 #   $1 - Date string in YYYY-MM-DD format

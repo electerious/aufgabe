@@ -80,14 +80,39 @@ list_tasks() {
 # Generates weekly summary
 # Format: Each day's tasks comma-separated, one line per day
 # Days without tasks are skipped
+# Arguments:
+#   $1 - Optional signed number of weeks relative to the current week (default: 0)
 # Returns:
 #   Prints the formatted summary
 get_weekly_summary() {
+  local week_offset="${1:-0}"
+
+  if [[ ! "${week_offset}" =~ ^[+-]?[0-9]+$ ]]; then
+    echo "Error: Week offset must be an integer" >&2
+    return 1
+  fi
+
   local week_start
   local week_end
 
   week_start="$(get_week_start)"
-  week_end="$(get_week_end)"
+
+  # Use a decimal base so offsets such as 08 do not get interpreted as octal.
+  local offset_sign=1
+  local offset_value="${week_offset}"
+  case "${offset_value}" in
+    -*)
+      offset_sign=-1
+      offset_value="${offset_value#-}"
+      ;;
+    +*)
+      offset_value="${offset_value#+}"
+      ;;
+  esac
+
+  local offset_days=$((offset_sign * 10#${offset_value} * 7))
+  week_start="$(_date_add_days "${week_start}" "${offset_days}")"
+  week_end="$(_date_add_days "${week_start}" 6)"
 
   ensure_data_dir
 

@@ -26,7 +26,7 @@ Usage: $(basename "$0") COMMAND [OPTIONS] [ARGS]
 Commands:
   add TEXT [OPTIONS]    Add a task to a specific day
   list [OPTIONS]        List tasks for a specific day
-  weekly                Show weekly summary
+  weekly [OPTIONS]      Show weekly summary
 
 Options for 'add':
   --yesterday           Add task to yesterday (default: today)
@@ -34,6 +34,9 @@ Options for 'add':
 
 Options for 'list':
   --date YYYY-MM-DD     List tasks for specific date (default: today)
+
+Options for 'weekly':
+  --offset N             Show a week relative to the current week (default: 0)
 
 Global Options:
   -h, --help            Show this help message
@@ -50,9 +53,11 @@ Examples:
   $(basename "$0") list
   $(basename "$0") list --date 2026-02-27
   $(basename "$0") weekly
+  $(basename "$0") weekly --offset -1
 
 Notes:
   - Weekly summary runs Monday-Sunday
+  - Weekly offset uses weeks relative to the current week (-1 is last week)
   - Days without tasks are omitted from weekly summary
 EOF
 }
@@ -192,8 +197,27 @@ cmd_list() {
 
 # Weekly command handler
 cmd_weekly() {
+  local week_offset=0
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --offset)
+        if [[ $# -lt 2 ]]; then
+          echo "Error: --offset requires a value" >&2
+          exit 1
+        fi
+        week_offset="$2"
+        shift 2
+        ;;
+      *)
+        echo "Error: Unexpected argument '$1'" >&2
+        exit 1
+        ;;
+    esac
+  done
+
   local summary
-  summary="$(get_weekly_summary)"
+  summary="$(get_weekly_summary "${week_offset}")"
   echo -e "${summary}"
 }
 
