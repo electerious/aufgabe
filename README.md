@@ -8,7 +8,7 @@ Daily task logging made simple.
 
 <br/>
 
-![aufgabe in action](https://s.electerious.com/images/aufgabe/readme-day.jpg)
+![aufgabe in action](https://s.electerious.com/images/aufgabe/readme.png)
 
 </div>
 
@@ -90,14 +90,24 @@ aufgabe list --date 2026-02-27
 ```bash
 # Show this week's tasks (Monday-Sunday)
 aufgabe weekly
+
+# Show last week's tasks
+aufgabe weekly --offset -1
+
+# Show next week's tasks
+aufgabe weekly --offset 1
 ```
 
+The optional `--offset` flag selects a week relative to the current week. Negative values select previous weeks, positive values select future weeks, and `0` selects the current week. The default is `0` when no offset is provided.
+
 The weekly summary format:
+
 - Each day's tasks are comma-separated on a single line
 - Each day appears on its own line
 - Days without tasks are omitted
 
 Example output:
+
 ```
 Fixed login bug, Added new feature, Code review
 Updated documentation, Team meeting
@@ -141,6 +151,7 @@ Tasks are stored as plain text files in `~/.aufgabe/` (or your custom directory)
 ```
 
 Each file contains one task per line:
+
 ```
 Fixed a bug in the login form
 Code review for PR #123
@@ -154,6 +165,7 @@ You can manually edit these files with any text editor.
 ### Running Tests
 
 Install bats-core:
+
 ```bash
 # Using Homebrew
 brew install bats-core
@@ -163,6 +175,7 @@ npm install -g bats
 ```
 
 Run the test suite:
+
 ```bash
 # Run all tests
 bats tests/
@@ -180,6 +193,7 @@ bats -t tests/
 **Invalid date format errors**
 
 Dates must be in `YYYY-MM-DD` format (e.g., `2026-02-27`). Common issues:
+
 - Wrong format: `02/27/2026` or `2026.02.27` ❌
 - Correct format: `2026-02-27` ✅
 
@@ -192,6 +206,7 @@ Dates must be in `YYYY-MM-DD` format (e.g., `2026-02-27`). Common issues:
 **Permission denied**
 
 Make sure the script is executable:
+
 ```bash
 chmod +x bin/aufgabe
 ```
