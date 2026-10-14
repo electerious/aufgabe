@@ -34,6 +34,17 @@ Daily task logging made simple.
 
 ## Install
 
+### Homebrew
+
+Install with Homebrew from the [electerious tap](https://github.com/electerious/homebrew-tap):
+
+```bash
+brew tap electerious/tap
+brew install aufgabe
+```
+
+### From source
+
 Clone the repository:
 
 ```bash
